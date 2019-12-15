@@ -1,21 +1,24 @@
 // 配置编译环境和线上环境之间的切换
 
-let baseUrl = '';
-let iconfontVersion = ['567566_qo5lxgtishg'];
-let iconfontUrl = `//at.alicdn.com/t/font_$key.css`;
-let codeUrl = `${baseUrl}/code`
 const env = process.env
+let baseUrl = ''
+// 图表库为avue和pig2套地址
+let iconfontVersion = ['567566_qo5lxgtishg', '667895_v7uduh4zui']
+let iconfontUrl = `//at.alicdn.com/t/font_$key.css`
+let codeUrl = `${window.location.origin}/code`
+let actUrl = `${window.location.origin}/act/modeler.html?modelId=`
 if (env.NODE_ENV == 'development') {
-    baseUrl = ``; // 开发环境地址
+
 } else if (env.NODE_ENV == 'production') {
-    baseUrl = ``; //生产环境地址
+
 } else if (env.NODE_ENV == 'test') {
-    baseUrl = ``; //测试环境地址
+
 }
 export {
-    baseUrl,
-    iconfontUrl,
-    iconfontVersion,
-    codeUrl,
-    env
+  baseUrl,
+  actUrl,
+  iconfontUrl,
+  iconfontVersion,
+  codeUrl,
+  env
 }

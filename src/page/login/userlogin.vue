@@ -50,14 +50,12 @@
             <img :src="code.src"
                  class="login-code-img"
                  @click="refreshCode"
-                 v-else />
-            <!-- <i class="icon-shuaxin login-code-icon" @click="refreshCode"></i> -->
+                 v-else/>
           </div>
         </el-col>
       </el-row>
 
     </el-form-item>
-    <el-checkbox v-model="checked">记住账号</el-checkbox>
     <el-form-item>
       <el-button type="primary"
                  size="small"
@@ -72,16 +70,8 @@ import { randomLenNum } from "@/util/util";
 import { mapGetters } from "vuex";
 export default {
   name: "userlogin",
-  data() {
-    const validateCode = (rule, value, callback) => {
-      if (this.code.value != value) {
-        this.loginForm.code = "";
-        this.refreshCode();
-        callback(new Error("请输入正确的验证码"));
-      } else {
-        callback();
-      }
-    };
+  data () {
+
     return {
       loginForm: {
         username: "admin",
@@ -91,10 +81,10 @@ export default {
       },
       checked: false,
       code: {
-        src: "",
+        src: "/code",
         value: "",
         len: 4,
-        type: "text"
+        type: "image"
       },
       loginRules: {
         username: [
@@ -106,40 +96,42 @@ export default {
         ],
         code: [
           { required: true, message: "请输入验证码", trigger: "blur" },
-          { min: 4, max: 4, message: "验证码长度为4位", trigger: "blur" },
-          { required: true, trigger: "blur", validator: validateCode }
+          { min: 4, max: 4, message: "验证码长度为4位", trigger: "blur" }
         ]
       },
       passwordType: "password"
     };
   },
-  created() {
+  created () {
     this.refreshCode();
   },
-  mounted() {},
+  mounted () { },
   computed: {
     ...mapGetters(["tagWel"])
   },
   props: [],
   methods: {
-    refreshCode() {
-      this.loginForm.redomStr = randomLenNum(this.code.len, true);
-      this.code.type == "text"
+    refreshCode () {
+      this.loginForm.code = ''
+      this.loginForm.randomStr = randomLenNum(this.code.len, true)
+      this.code.type === 'text'
         ? (this.code.value = randomLenNum(this.code.len))
-        : (this.code.src = `${this.codeUrl}/${this.loginForm.redomStr}`);
-      this.loginForm.code = this.code.value;
+        : (this.code.src = `${this.codeUrl}?randomStr=${this.loginForm.randomStr}`)
     },
-    showPassword() {
-      this.passwordType === "text"
-        ? (this.passwordType = "password")
-        : (this.passwordType = "text");
+    showPassword () {
+      this.passwordType == ''
+        ? (this.passwordType = 'password')
+        : (this.passwordType = '')
     },
-    handleLogin() {
+    handleLogin () {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.$store.dispatch("LoginByUsername", this.loginForm).then(() => {
             this.$router.push({ path: this.tagWel.value });
-          });
+          }).catch(()=>{
+            this.refreshCode()
+          })
+
         }
       });
     }

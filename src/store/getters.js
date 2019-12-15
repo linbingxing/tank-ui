@@ -9,18 +9,16 @@ const getters = {
   keyCollapse: (state, getters) => getters.screen > 1 ? getters.isCollapse : false,
   screen: state => state.common.screen,
   isLock: state => state.common.isLock,
-  isFullScren: state => state.common.isFullScren,
+  isFullScreen: state => state.common.isFullScreen,
   lockPasswd: state => state.common.lockPasswd,
   tagList: state => state.tags.tagList,
   tagWel: state => state.tags.tagWel,
-  token: state => state.user.token,
+  access_token: state => state.user.access_token,
+  refresh_token: state => state.user.refresh_token,
+  expires_in: state => state.user.expires_in,
   roles: state => state.user.roles,
-  permission: state => state.user.permission,
-  menuId: state => state.user.menuId,
+  permissions: state => state.user.permissions,
   menu: state => state.user.menu,
-  menuAll: state => state.user.menuAll,
-  logsList: state => state.logs.logsList,
-  logsLen: state => state.logs.logsList.length || 0,
-  logsFlag: (state, getters) => getters.logsLen === 0
+  menuAll: state => state.user.menuAll
 }
 export default getters

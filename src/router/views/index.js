@@ -17,25 +17,6 @@ export default [{
         path: 'index',
         name: '个人信息',
         component: () =>
-            import ( /* webpackChunkName: "views" */ '@/views/info/index')
-    }, {
-        path: 'message',
-        name: '消息中心',
-        component: () =>
-            import ( /* webpackChunkName: "views" */ '@/views/info/message')
+            import ( /* webpackChunkName: "page" */ '@/views/admin/user/info'),
     }]
-}, {
-    path: '/advanced-router',
-    component: Layout,
-    children: [{
-        path: 'mutative-detail/:id',
-        name: '动态路由详情页',
-        component: () =>
-            import ( /* webpackChunkName: "utils" */ '@/views/advanced-router/mutative-detail')
-    }, {
-        path: 'argument-detail',
-        name: '参数路由详情页',
-        component: () =>
-            import ( /* webpackChunkName: "utils" */ '@/views/advanced-router/argument-detail')
-    }]
-}, ]
+}]

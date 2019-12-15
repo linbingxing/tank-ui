@@ -1,196 +1,244 @@
+<!--
+  -    Copyright (c) 2018-2025, lengleng All rights reserved.
+  -
+  - Redistribution and use in source and binary forms, with or without
+  - modification, are permitted provided that the following conditions are met:
+  -
+  - Redistributions of source code must retain the above copyright notice,
+  - this list of conditions and the following disclaimer.
+  - Redistributions in binary form must reproduce the above copyright
+  - notice, this list of conditions and the following disclaimer in the
+  - documentation and/or other materials provided with the distribution.
+  - Neither the name of the pig4cloud.com developer nor the names of its
+  - contributors may be used to endorse or promote products derived from
+  - this software without specific prior written permission.
+  - Author: lengleng (wangiegie@gmail.com)
+  -->
+
 <template>
-  <div>
+  <div class="app-container calendar-list-container">
     <basic-container>
       <avue-crud :option="tableOption"
-                 :data="tableData"
-                 :table-loading="tableLoading"
-                 :page="page"
+                 :data="list"
                  ref="crud"
-                 @row-save="handleSave"
-                 @row-update="handleUpdate"
-                 @row-del="handleDel">
-        <template slot-scope="scope"
-                  slot="menu">
-          <el-button icon="el-icon-check"
+                 :page="page"
+                 v-model="form"
+                 :table-loading="listLoading"
+                 :before-open="handleOpenBefore"
+                 @on-load="getList"
+                 @search-change="handleFilter"
+                 @refresh-change="handleRefreshChange"
+                 @row-update="update"
+                 @row-save="create">
+
+        <template slot="menuLeft">
+          <el-button v-if="roleManager_btn_add"
+                     class="filter-item"
+                     @click="handleCreate"
                      size="small"
-                     @click="handleGrade(scope.row,scope.$index)">权限</el-button>
+                     type="primary"
+                     icon="el-icon-edit">添加
+          </el-button>
+        </template>
+
+        <template slot="menu"
+                  slot-scope="scope">
+          <el-button size="mini"
+                     type="text"
+                     icon="el-icon-edit"
+                     v-if="roleManager_btn_edit"
+                     @click="handleUpdate(scope.row,scope.index)">编辑
+          </el-button>
+          <el-button size="mini"
+                     type="text"
+                     icon="el-icon-delete"
+                     v-if="roleManager_btn_del"
+                     @click="handleDelete(scope.row,scope.index)">删除
+          </el-button>
+          <el-button size="mini"
+                     type="text"
+                     icon="el-icon-plus"
+                     plain
+                     @click="handlePermission(scope.row,scope.index)"
+                     v-if="roleManager_btn_perm">权限
+          </el-button>
         </template>
       </avue-crud>
-      <el-dialog title="菜单"
-                 :visible.sync="grade.box"
-                 width="40%">
-        <el-tree :data="menuAll"
-                 :default-checked-keys="grade.check"
-                 :default-expanded-keys="grade.check"
-                 show-checkbox
-                 node-key="id"
-                 @check-change="handleGradeCheckChange">
-        </el-tree>
-        <span slot="footer"
-              class="dialog-footer">
-          <el-button type="primary"
-                     @click="handleGradeUpdate">更新</el-button>
-        </span>
-      </el-dialog>
     </basic-container>
+    <el-dialog title="分配权限"
+               :visible.sync="dialogPermissionVisible">
+      <el-tree class="filter-tree"
+               :data="treeData"
+               :default-checked-keys="checkedKeys"
+               :check-strictly="false"
+               node-key="id"
+               highlight-current
+               :props="defaultProps"
+               show-checkbox
+               ref="menuTree"
+               :filter-node-method="filterNode"
+               default-expand-all>
+      </el-tree>
+      <div slot="footer"
+           class="dialog-footer">
+        <el-button type="primary"
+                   @click="updatePermession(roleId, roleCode)">更 新
+        </el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-import { getRoleData } from '@/api/admin'
-import { roleOption } from "@/const/admin/adminTabelOption.js";
-export default {
-  name: "role",
-  components: {},
-  data () {
-    return {
-      tableOption: {}, //表格设置属性
-      tableData: [], //表格的数据
-      tablePage: 1,
-      tableLoading: false,
-      tabelObj: {},
-      page: {
-        total: 0, //总页数
-        currentPage: 1, //当前页数
-        pageSize: 10 //每页显示多少条
-      },
-      grade: {
-        box: false,
-        check: []
-      }
-    };
-  },
-  created () {
-    //初始化数据格式
-    this.tableOption = roleOption;
-    this.handleList();
-  },
-  watch: {},
-  mounted () { },
-  computed: {
-    ...mapGetters(["permission", "menuAll"])
-  },
-  props: [],
-  methods: {
-    /**
-     * @title 权限更新
-     *
-     **/
-    handleGradeUpdate () {
-      this.tabelObj.check = [].concat(this.grade.check);
-      this.tabelObj = {};
-      this.grade.check = [];
-      this.grade.box = false;
-    },
-    /**
-     * @title 权限选择
-     *
-     **/
-    handleGradeCheckChange (data, checked) {
-      if (checked) {
-        this.grade.check.push(data.id);
-      } else {
-        this.grade.check.splice(this.grade.check.indexOf(data.id), 1);
+  import {addObj, delObj, fetchList, fetchRoleTree, getObj, permissionUpd, putObj} from '@/api/admin/role'
+  import {tableOption} from '@/const/crud/admin/role'
+  import {fetchMenuTree} from '@/api/admin/menu'
+  import {mapGetters} from 'vuex'
+
+  export default {
+    name: 'table_role',
+    data() {
+      return {
+        tableOption: tableOption,
+        treeData: [],
+        checkedKeys: [],
+        defaultProps: {
+          label: "name",
+          value: 'id'
+        },
+        page: {
+          total: 0, // 总页数
+          currentPage: 1, // 当前页数
+          pageSize: 20 // 每页显示多少条
+        },
+        menuIds: '',
+        list: [],
+        listLoading: true,
+        form: {},
+        roleId: undefined,
+        roleCode: undefined,
+        rolesOptions: undefined,
+        dialogPermissionVisible: false,
+        roleManager_btn_add: false,
+        roleManager_btn_edit: false,
+        roleManager_btn_del: false,
+        roleManager_btn_perm: false
       }
     },
-    /**
-     * @title 打开权限
-     */
-    handleGrade (row) {
-      this.$store.dispatch("GetMenuAll").then(() => {
-        this.grade.box = true;
-        this.tabelObj = row;
-        this.grade.check = this.tabelObj.check;
-      });
+    created() {
+      this.roleManager_btn_add = this.permissions['sys_role_add']
+      this.roleManager_btn_edit = this.permissions['sys_role_edit']
+      this.roleManager_btn_del = this.permissions['sys_role_del']
+      this.roleManager_btn_perm = this.permissions['sys_role_perm']
     },
-    /**
-     * @title 打开新增窗口
-     * @detail 调用crud的handleadd方法即可
-     *
-     **/
-    handleAdd () {
-      this.$refs.crud.rowAdd();
+    computed: {
+      ...mapGetters(['elements', 'permissions'])
     },
-    /**
-     * @title 获取数据
-     * @detail 赋值为tableData表格即可
-     *
-     **/
-    handleList () {
-      this.tableLoading = true;
-      getRoleData({ page: `${this.tablePage}` })
-        .then(res => {
-          const data = res.data.data;
-          setTimeout(() => {
-            this.tableData = data.tableData;
-            this.page = {
-              total: data.total,
-              pageSize: data.pageSize
-            };
-            this.tableLoading = false;
-          }, 1000);
-        });
-    },
-    /**
-     * @title 数据添加
-     * @param row 为当前的数据
-     * @param done 为表单关闭函数
-     *
-     **/
-    handleSave (row, done) {
-      this.tableData.push(row);
-      this.$message({
-        showClose: true,
-        message: "添加成功",
-        type: "success"
-      });
-      done();
-    },
-    /**
-     * @title 数据删除
-     * @param row 为当前的数据
-     * @param index 为当前更新数据的行数
-     *
-     **/
-    handleDel (row, index) {
-      this.$confirm(`是否确认删除序号为${row.name}`, "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          this.tableData.splice(index, 1);
-          this.$message({
-            showClose: true,
-            message: "删除成功",
-            type: "success"
-          });
+    methods: {
+      getList(page, params) {
+        this.listLoading = true
+        fetchList(Object.assign({
+          current: page.currentPage,
+          size: page.pageSize
+        }, params)).then(response => {
+          this.list = response.data.data.records
+          this.page.total = response.data.data.total
+          this.listLoading = false
         })
-        .catch(() => { });
-    },
-    /**
-     * @title 数据更新
-     * @param row 为当前的数据
-     * @param index 为当前更新数据的行数
-     * @param done 为表单关闭函数
-     *
-     **/
-    handleUpdate (row, index, done) {
-      this.tableData.splice(index, 1, row);
-      this.$message({
-        showClose: true,
-        message: "修改成功",
-        type: "success"
-      });
-      done();
+      },
+      handleRefreshChange() {
+        this.getList(this.page)
+      },
+      handleFilter(param) {
+        this.page.page = 1;
+        this.getList(this.page, param);
+      },
+      handleCreate() {
+        this.$refs.crud.rowAdd();
+      },
+      handleOpenBefore(show, type) {
+        show();
+      },
+      handleUpdate(row, index) {
+        this.$refs.crud.rowEdit(row, index);
+      },
+      handlePermission(row) {
+        fetchRoleTree(row.roleId)
+          .then(response => {
+            this.checkedKeys = response.data
+            return fetchMenuTree()
+          })
+          .then(response => {
+            this.treeData = response.data.data
+            // 解析出所有的太监节点
+            this.checkedKeys = this.resolveAllEunuchNodeId(this.treeData, this.checkedKeys, [])
+            this.dialogStatus = 'permission'
+            this.dialogPermissionVisible = true
+            this.roleId = row.roleId
+            this.roleCode = row.roleCode
+          })
+      },
+      resolveAllEunuchNodeId(json, idArr, temp) {
+        for (let i = 0; i < json.length; i++) {
+          const item = json[i]
+          // 存在子节点，递归遍历;不存在子节点，将json的id添加到临时数组中
+          if (item.children && item.children.length !== 0) {
+            this.resolveAllEunuchNodeId(item.children, idArr, temp)
+          } else {
+            temp.push(idArr.filter(id => id === item.id))
+          }
+        }
+        return temp
+      },
+      filterNode(value, data) {
+        if (!value) return true
+        return data.label.indexOf(value) !== -1
+      },
+      getNodeData(data, done) {
+        done();
+      },
+      handleDelete(row, index) {
+        var _this = this
+        this.$confirm('是否确认删除名称为"' + row.roleName + '"'+ '"的数据项?', '警告', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(function () {
+          return delObj(row.roleId)
+        }).then(() => {
+          this.getList(this.page)
+          this.list.splice(index, 1);
+          this.$notify.success('删除成功')
+        }).catch(function () {
+        })
+      },
+      create(row, done, loading) {
+        addObj(this.form).then(() => {
+          this.getList(this.page)
+          done();
+            this.$notify.success('创建成功')
+        }).catch(() => {
+          loading();
+        });
+      },
+      update(row, index, done, loading) {
+        putObj(this.form).then(() => {
+          this.getList(this.page)
+          done();
+          this.$notify.success('修改成功')
+        }).catch(() => {
+          loading();
+        });
+      },
+      updatePermession (roleId) {
+          this.menuIds = ''
+          this.menuIds = this.$refs.menuTree.getCheckedKeys().join(',').concat(',').concat(this.$refs.menuTree.getHalfCheckedKeys().join(','))
+          permissionUpd(roleId, this.menuIds).then(() => {
+              this.dialogPermissionVisible = false
+              this.$store.dispatch('GetMenu', false)
+              this.$notify.success('修改成功')
+          })
+      }
     }
   }
-};
 </script>
-
-<style lang="scss" scoped>
-.table-container {
-  padding: 8px 10px;
-}
-</style>
