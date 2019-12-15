@@ -16,9 +16,9 @@
               <i class="el-icon-check"></i>&nbsp;{{item}}
             </li>
           </ul>
-          <el-button type="primary"
+          <!-- <el-button type="primary"
                      size="small"
-                     class="login-index">首页</el-button>
+                     class="login-index">首页</el-button> -->
         </div>
       </div>
       <div class="login-border  animated fadeInRight">
