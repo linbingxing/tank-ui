@@ -69,8 +69,8 @@ export function addDateRange(params, dateRange) {
 export function selectDictLabel(datas, value) {
 	var actions = [];
 	Object.keys(datas).map((key) => {
-		if (datas[key].dictValue == ('' + value)) {
-			actions.push(datas[key].dictLabel);
+		if (datas[key].code == ('' + value)) {
+			actions.push(datas[key].name);
 			return false;
 		}
 	})
@@ -116,7 +116,7 @@ export function handleTree(data, id, parentId, children, rootId) {
 	id = id || 'id'
 	parentId = parentId || 'parentId'
 	children = children || 'children'
-	rootId = rootId || 0
+	rootId = rootId || -1
 	//对源数据深度克隆
 	const cloneData = JSON.parse(JSON.stringify(data))
 	//循环所有项

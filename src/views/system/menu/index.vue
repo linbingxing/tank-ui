@@ -1,6 +1,16 @@
 <template>
   <div class="app-container">
     <el-form :inline="true">
+      <el-form-item label="所属系统">
+       <el-select v-model="queryParams.sysId" placeholder="所属系统" clearable size="small">
+          <el-option
+            v-for="dict in sysIdOptions"
+            :key="dict.code"
+            :label="dict.name"
+            :value="dict.code"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="菜单名称">
         <el-input
           v-model="queryParams.menuName"
@@ -14,9 +24,9 @@
         <el-select v-model="queryParams.status" placeholder="菜单状态" clearable size="small">
           <el-option
             v-for="dict in statusOptions"
-            :key="dict.dictValue"
-            :label="dict.dictLabel"
-            :value="dict.dictValue"
+            :key="dict.code"
+            :label="dict.name"
+            :value="dict.code"
           />
         </el-select>
       </el-form-item>
@@ -29,17 +39,18 @@
     <el-table
       v-loading="loading"
       :data="menuList"
-      row-key="menuId"
+      row-key="id"
       :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
     >
       <el-table-column prop="menuName" label="菜单名称" :show-overflow-tooltip="true" width="160"></el-table-column>
+      <el-table-column prop="sysId" label="所属系统" :formatter="sysIdFormat" width="80"></el-table-column>
       <el-table-column prop="icon" label="图标" align="center" width="100">
         <template slot-scope="scope">
           <svg-icon :icon-class="scope.row.icon" />
         </template>
       </el-table-column>
-      <el-table-column prop="orderNum" label="排序" width="60"></el-table-column>
-      <el-table-column prop="perms" label="权限标识" :show-overflow-tooltip="true"></el-table-column>
+      <el-table-column prop="sort" label="排序" width="60"></el-table-column>
+      <el-table-column prop="permission" label="权限标识" :show-overflow-tooltip="true"></el-table-column>
       <el-table-column prop="component" label="组件路径" :show-overflow-tooltip="true"></el-table-column>
       <el-table-column prop="status" label="状态" :formatter="statusFormat" width="80"></el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime">
@@ -77,6 +88,18 @@
     <el-dialog :title="title" :visible.sync="open" width="600px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-row>
+           <el-col :span="12">
+            <el-form-item  label="所属系统">
+              <el-select v-model="form.sysId" prop="sysId">
+                <el-option
+                  v-for="dict in sysIdOptions"
+                  :key="dict.code"
+                  :label="dict.name"
+                  :value="dict.code"
+                >{{dict.name}}</el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
           <el-col :span="24">
             <el-form-item label="上级菜单">
               <treeselect
@@ -89,16 +112,17 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="菜单类型" prop="menuType">
-              <el-radio-group v-model="form.menuType">
-                <el-radio label="M">目录</el-radio>
-                <el-radio label="C">菜单</el-radio>
-                <el-radio label="F">按钮</el-radio>
+            <el-form-item label="菜单类型" prop="type">
+              <el-radio-group v-model="form.type">
+                <el-radio label="1">目录</el-radio>
+                <el-radio label="2">顶层菜单</el-radio>
+                <el-radio label="3">菜单</el-radio>
+                <el-radio label="4">按钮</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item v-if="form.menuType != 'F'" label="菜单图标">
+            <el-form-item v-if="form.type != '4'" label="菜单图标">
               <el-popover
                 placement="bottom-start"
                 width="460"
@@ -125,52 +149,52 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="显示排序" prop="orderNum">
-              <el-input-number v-model="form.orderNum" controls-position="right" :min="0" />
+            <el-form-item label="显示排序" prop="sort">
+              <el-input-number v-model="form.sort" controls-position="right" :min="0" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item v-if="form.menuType != 'F'" label="是否外链">
-              <el-radio-group v-model="form.isFrame">
-                <el-radio label="0">是</el-radio>
-                <el-radio label="1">否</el-radio>
+            <el-form-item v-if="form.type != '4'" label="是否外链">
+              <el-radio-group v-model="form.isHref">
+                <el-radio label="1">是</el-radio>
+                <el-radio label="0">否</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item v-if="form.menuType != 'F'" label="路由地址" prop="path">
+            <el-form-item v-if="form.type != '4'" label="路由地址" prop="path">
               <el-input v-model="form.path" placeholder="请输入路由地址" />
             </el-form-item>
           </el-col>
-          <el-col :span="12" v-if="form.menuType == 'C'">
+          <el-col :span="12" v-if="form.type == '3'">
             <el-form-item label="组件路径" prop="component">
               <el-input v-model="form.component" placeholder="请输入组件路径" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item v-if="form.menuType != 'M'" label="权限标识">
-              <el-input v-model="form.perms" placeholder="请权限标识" maxlength="50" />
+            <el-form-item v-if="form.type != '1'" label="权限标识">
+              <el-input v-model="form.permission" placeholder="请权限标识" maxlength="50" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item v-if="form.menuType != 'F'" label="显示状态">
+            <el-form-item v-if="form.type != '4'" label="显示状态">
               <el-radio-group v-model="form.visible">
                 <el-radio
                   v-for="dict in visibleOptions"
-                  :key="dict.dictValue"
-                  :label="dict.dictValue"
-                >{{dict.dictLabel}}</el-radio>
+                  :key="dict.code"
+                  :label="dict.code"
+                >{{dict.name}}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item v-if="form.menuType != 'F'" label="菜单状态">
+            <el-form-item v-if="form.type != '4'" label="菜单状态">
               <el-radio-group v-model="form.status">
                 <el-radio
                   v-for="dict in statusOptions"
-                  :key="dict.dictValue"
-                  :label="dict.dictValue"
-                >{{dict.dictLabel}}</el-radio>
+                  :key="dict.code"
+                  :label="dict.code"
+                >{{dict.name}}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -209,19 +233,25 @@ export default {
       visibleOptions: [],
       // 菜单状态数据字典
       statusOptions: [],
+      // 菜单状态数据字典
+      sysIdOptions: [],
       // 查询参数
       queryParams: {
         menuName: undefined,
-        visible: undefined
+        status: undefined,
+        sysId: undefined
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
+        sysId: [
+          { required: true, message: "所属系统不能为空", trigger: "blur" }
+        ],
         menuName: [
           { required: true, message: "菜单名称不能为空", trigger: "blur" }
         ],
-        orderNum: [
+        sort: [
           { required: true, message: "菜单顺序不能为空", trigger: "blur" }
         ],
         path: [
@@ -238,6 +268,9 @@ export default {
     this.getDicts("sys_normal_disable").then(response => {
       this.statusOptions = response.data;
     });
+    this.getDicts("menu_platform").then(response => {
+      this.sysIdOptions = response.data;
+    });
   },
   methods: {
     // 选择图标
@@ -248,7 +281,7 @@ export default {
     getList() {
       this.loading = true;
       listMenu(this.queryParams).then(response => {
-        this.menuList = this.handleTree(response.data, "menuId");
+        this.menuList = this.handleTree(response.data, "id");
         this.loading = false;
       });
     },
@@ -258,7 +291,7 @@ export default {
         delete node.children;
       }
       return {
-        id: node.menuId,
+        id: node.id,
         label: node.menuName,
         children: node.children
       };
@@ -267,24 +300,28 @@ export default {
     getTreeselect() {
       listMenu().then(response => {
         this.menuOptions = [];
-        const menu = { menuId: 0, menuName: '主类目', children: [] };
-        menu.children = this.handleTree(response.data, "menuId");
+        const menu = { id: -1, menuName: '主类目', children: [] };
+        menu.children = this.handleTree(response.data, "id");
         this.menuOptions.push(menu);
       });
     },
     // 显示状态字典翻译
     visibleFormat(row, column) {
-      if (row.menuType == "F") {
+      if (row.type == "4") {
         return "";
       }
       return this.selectDictLabel(this.visibleOptions, row.visible);
     },
     // 菜单状态字典翻译
     statusFormat(row, column) {
-      if (row.menuType == "F") {
+      if (row.type == "4") {
         return "";
       }
       return this.selectDictLabel(this.statusOptions, row.status);
+    },
+     // 系统字典翻译
+    sysIdFormat(row, column) {
+      return this.selectDictLabel(this.sysIdOptions, row.sysId);
     },
     // 取消按钮
     cancel() {
@@ -294,15 +331,16 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        menuId: undefined,
-        parentId: 0,
+        id: undefined,
+        parentId: -1,
         menuName: undefined,
         icon: undefined,
-        menuType: "M",
-        orderNum: undefined,
-        isFrame: "1",
-        visible: "0",
-        status: "0"
+        type: "1",
+        sort: undefined,
+        isHref: 1,
+        visible: 0,
+        status: 0,
+        sysId: undefined
       };
       this.resetForm("form");
     },
@@ -315,7 +353,8 @@ export default {
       this.reset();
       this.getTreeselect();
       if (row != null) {
-        this.form.parentId = row.menuId;
+        this.form.parentId = row.id;
+        this.form.sysId = row.sysId;
       }
       this.open = true;
       this.title = "添加菜单";
@@ -324,8 +363,11 @@ export default {
     handleUpdate(row) {
       this.reset();
       this.getTreeselect();
-      getMenu(row.menuId).then(response => {
+      getMenu(row.id).then(response => {
         this.form = response.data;
+        this.form.status = this.form.status+"";
+        this.form.isHref = this.form.isHref+"";
+        this.form.sysId = this.form.sysId+"";
         this.open = true;
         this.title = "修改菜单";
       });
@@ -334,7 +376,7 @@ export default {
     submitForm: function() {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          if (this.form.menuId != undefined) {
+          if (this.form.id != undefined) {
             updateMenu(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess("修改成功");
@@ -361,7 +403,7 @@ export default {
           cancelButtonText: "取消",
           type: "warning"
         }).then(function() {
-          return delMenu(row.menuId);
+          return delMenu(row.id);
         }).then(() => {
           this.getList();
           this.msgSuccess("删除成功");

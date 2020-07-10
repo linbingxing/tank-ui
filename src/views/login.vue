@@ -18,7 +18,7 @@
           <svg-icon slot="prefix" icon-class="password" class="el-input__icon input-icon" />
         </el-input>
       </el-form-item>
-      <el-form-item prop="code">
+      <!-- <el-form-item prop="code">
         <el-input
           v-model="loginForm.code"
           auto-complete="off"
@@ -32,7 +32,7 @@
           <img :src="codeUrl" @click="getCode" />
         </div>
       </el-form-item>
-      <el-checkbox v-model="loginForm.rememberMe" style="margin:0px 0px 25px 0px;">记住密码</el-checkbox>
+      <el-checkbox v-model="loginForm.rememberMe" style="margin:0px 0px 25px 0px;">记住密码</el-checkbox> -->
       <el-form-item style="width:100%;">
         <el-button
           :loading="loading"
@@ -65,8 +65,8 @@ export default {
       codeUrl: "",
       cookiePassword: "",
       loginForm: {
-        username: "admin",
-        password: "admin123",
+        username: "super",
+        password: "123456",
         rememberMe: false,
         code: "",
         uuid: ""
@@ -78,7 +78,7 @@ export default {
         password: [
           { required: true, trigger: "blur", message: "密码不能为空" }
         ],
-        code: [{ required: true, trigger: "change", message: "验证码不能为空" }]
+        // code: [{ required: true, trigger: "change", message: "验证码不能为空" }]
       },
       loading: false,
       redirect: undefined
@@ -98,10 +98,10 @@ export default {
   },
   methods: {
     getCode() {
-      getCodeImg().then(res => {
-        this.codeUrl = "data:image/gif;base64," + res.img;
-        this.loginForm.uuid = res.uuid;
-      });
+      // getCodeImg().then(res => {
+      //   this.codeUrl = "data:image/gif;base64," + res.img;
+      //   this.loginForm.uuid = res.uuid;
+      // });
     },
     getCookie() {
       const username = Cookies.get("username");
