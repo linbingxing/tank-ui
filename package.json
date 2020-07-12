@@ -2,7 +2,7 @@
   "name": "ruoyi",
   "version": "2.3.0",
   "description": "权限管理系统",
-  "author": "若依",
+  "author": "权限",
   "license": "MIT",
   "scripts": {
     "dev": "vue-cli-service serve --open",

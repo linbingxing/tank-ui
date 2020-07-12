@@ -31,9 +31,9 @@
         >
           <el-option
             v-for="dict in statusOptions"
-            :key="dict.dictValue"
-            :label="dict.dictLabel"
-            :value="dict.dictValue"
+            :key="Number(dict.code)"
+            :label="dict.name"
+            :value="Number(dict.code)"
           />
         </el-select>
       </el-form-item>
@@ -98,7 +98,7 @@
 
     <el-table v-loading="loading" :data="roleList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="角色编号" prop="roleId" width="120" />
+      <el-table-column label="角色编号" prop="id" width="120" />
       <el-table-column label="角色名称" prop="roleName" :show-overflow-tooltip="true" width="150" />
       <el-table-column label="权限字符" prop="roleKey" :show-overflow-tooltip="true" width="150" />
       <el-table-column label="显示顺序" prop="roleSort" width="100" />
@@ -106,8 +106,8 @@
         <template slot-scope="scope">
           <el-switch
             v-model="scope.row.status"
-            active-value="0"
-            inactive-value="1"
+            :active-value="1"
+            :inactive-value="0"
             @change="handleStatusChange(scope.row)"
           ></el-switch>
         </template>
@@ -168,21 +168,12 @@
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in statusOptions"
-              :key="dict.dictValue"
-              :label="dict.dictValue"
-            >{{dict.dictLabel}}</el-radio>
+              :key="Number(dict.code)"
+              :label="Number(dict.code)"
+            >{{dict.name}}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="菜单权限">
-          <el-tree
-            :data="menuOptions"
-            show-checkbox
-            ref="menu"
-            node-key="id"
-            empty-text="加载中，请稍后"
-            :props="defaultProps"
-          ></el-tree>
-        </el-form-item>
+       
         <el-form-item label="备注">
           <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"></el-input>
         </el-form-item>
@@ -201,6 +192,16 @@
         </el-form-item>
         <el-form-item label="权限字符">
           <el-input v-model="form.roleKey" :disabled="true" />
+        </el-form-item>
+         <el-form-item label="菜单权限">
+          <el-tree
+            :data="menuOptions"
+            show-checkbox
+            ref="menu"
+            node-key="id"
+            empty-text="加载中，请稍后"
+            :props="defaultProps"
+          ></el-tree>
         </el-form-item>
         <el-form-item label="权限范围">
           <el-select v-model="form.dataScope">
@@ -302,7 +303,7 @@ export default {
       form: {},
       defaultProps: {
         children: "children",
-        label: "label"
+        label: "name"
       },
       // 表单校验
       rules: {
@@ -330,8 +331,8 @@ export default {
       this.loading = true;
       listRole(this.addDateRange(this.queryParams, this.dateRange)).then(
         response => {
-          this.roleList = response.rows;
-          this.total = response.total;
+          this.roleList = response.data.records;
+          this.total = response.data.total;
           this.loading = false;
         }
       );
@@ -369,30 +370,30 @@ export default {
     /** 根据角色ID查询菜单树结构 */
     getRoleMenuTreeselect(roleId) {
       roleMenuTreeselect(roleId).then(response => {
-        this.menuOptions = response.menus;
-        this.$refs.menu.setCheckedKeys(response.checkedKeys);
+        this.menuOptions = response.data.menus;
+        this.$refs.menu.setCheckedKeys(response.data.checkedKeys);
       });
     },
     /** 根据角色ID查询部门树结构 */
     getRoleDeptTreeselect(roleId) {
       roleDeptTreeselect(roleId).then(response => {
-        this.deptOptions = response.depts;
-        this.$refs.dept.setCheckedKeys(response.checkedKeys);
+        this.deptOptions = response.data.depts;
+        this.$refs.dept.setCheckedKeys(response.data.checkedKeys);
       });
     },
     // 角色状态修改
     handleStatusChange(row) {
-      let text = row.status === "0" ? "启用" : "停用";
+      let text = row.status === 0 ? "停用" : "启用";
       this.$confirm('确认要"' + text + '""' + row.roleName + '"角色吗?', "警告", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
           type: "warning"
         }).then(function() {
-          return changeRoleStatus(row.roleId, row.status);
+          return changeRoleStatus(row.id, row.status);
         }).then(() => {
           this.msgSuccess(text + "成功");
         }).catch(function() {
-          row.status = row.status === "0" ? "1" : "0";
+          row.status = row.status === "1" ? "1" : "0";
         });
     },
     // 取消按钮
@@ -411,11 +412,11 @@ export default {
         this.$refs.menu.setCheckedKeys([]);
       }
       this.form = {
-        roleId: undefined,
+        id: undefined,
         roleName: undefined,
         roleKey: undefined,
         roleSort: 0,
-        status: "0",
+        status: "1",
         menuIds: [],
         deptIds: [],
         remark: undefined
@@ -435,7 +436,7 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.roleId)
+      this.ids = selection.map(item => item.id)
       this.single = selection.length!=1
       this.multiple = !selection.length
     },
@@ -449,9 +450,9 @@ export default {
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-      const roleId = row.roleId || this.ids
+      const roleId = row.id || this.ids
       this.$nextTick(() => {
-        this.getRoleMenuTreeselect(roleId);
+        
       });
       getRole(roleId).then(response => {
         this.form = response.data;
@@ -463,9 +464,10 @@ export default {
     handleDataScope(row) {
       this.reset();
       this.$nextTick(() => {
-        this.getRoleDeptTreeselect(row.roleId);
+        this.getRoleDeptTreeselect(row.id);
+        this.getRoleMenuTreeselect(row.id);
       });
-      getRole(row.roleId).then(response => {
+      getRole(row.id).then(response => {
         this.form = response.data;
         this.openDataScope = true;
         this.title = "分配数据权限";
@@ -475,8 +477,7 @@ export default {
     submitForm: function() {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          if (this.form.roleId != undefined) {
-            this.form.menuIds = this.getMenuAllCheckedKeys();
+          if (this.form.id != undefined) {
             updateRole(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess("修改成功");
@@ -485,7 +486,6 @@ export default {
               }
             });
           } else {
-            this.form.menuIds = this.getMenuAllCheckedKeys();
             addRole(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess("新增成功");
@@ -499,9 +499,16 @@ export default {
     },
     /** 提交按钮（数据权限） */
     submitDataScope: function() {
-      if (this.form.roleId != undefined) {
+      if (this.form.id != undefined) {
+        this.form.menuIds = this.getMenuAllCheckedKeys();
         this.form.deptIds = this.getDeptAllCheckedKeys();
-        dataScope(this.form).then(response => {
+        let data ={
+          roleId: this.form.id,
+          menuIds: this.form.menuIds,
+          deptIds:  this.form.deptIds,
+          dataScope: this.form.dataScope
+        };
+        dataScope(data).then(response => {
           if (response.code === 200) {
             this.msgSuccess("修改成功");
             this.openDataScope = false;
@@ -512,7 +519,7 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const roleIds = row.roleId || this.ids;
+      const roleIds = row.id || this.ids;
       this.$confirm('是否确认删除角色编号为"' + roleIds + '"的数据项?', "警告", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",

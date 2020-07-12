@@ -23,9 +23,9 @@
         <el-select v-model="queryParams.status" placeholder="岗位状态" clearable size="small">
           <el-option
             v-for="dict in statusOptions"
-            :key="dict.dictValue"
-            :label="dict.dictLabel"
-            :value="dict.dictValue"
+            :key="Number(dict.code)"
+            :label="dict.name"
+            :value="Number(dict.code)"
           />
         </el-select>
       </el-form-item>
@@ -78,10 +78,10 @@
 
     <el-table v-loading="loading" :data="postList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="岗位编号" align="center" prop="postId" />
+      <el-table-column label="岗位编号" align="center" prop="id" />
       <el-table-column label="岗位编码" align="center" prop="postCode" />
       <el-table-column label="岗位名称" align="center" prop="postName" />
-      <el-table-column label="岗位排序" align="center" prop="postSort" />
+      <el-table-column label="岗位排序" align="center" prop="sort" />
       <el-table-column label="状态" align="center" prop="status" :formatter="statusFormat" />
       <el-table-column label="创建时间" align="center" prop="createTime" width="180">
         <template slot-scope="scope">
@@ -125,16 +125,16 @@
         <el-form-item label="岗位编码" prop="postCode">
           <el-input v-model="form.postCode" placeholder="请输入编码名称" />
         </el-form-item>
-        <el-form-item label="岗位顺序" prop="postSort">
-          <el-input-number v-model="form.postSort" controls-position="right" :min="0" />
+        <el-form-item label="岗位顺序" prop="sort">
+          <el-input-number v-model="form.sort" controls-position="right" :min="0" />
         </el-form-item>
         <el-form-item label="岗位状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in statusOptions"
-              :key="dict.dictValue"
-              :label="dict.dictValue"
-            >{{dict.dictLabel}}</el-radio>
+              :key="Number(dict.code)"
+              :label="Number(dict.code)"
+            >{{dict.name}}</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
@@ -176,8 +176,8 @@ export default {
       statusOptions: [],
       // 查询参数
       queryParams: {
-        pageNum: 1,
-        pageSize: 10,
+        current: 1,
+        size: 10,
         postCode: undefined,
         postName: undefined,
         status: undefined
@@ -192,7 +192,7 @@ export default {
         postCode: [
           { required: true, message: "岗位编码不能为空", trigger: "blur" }
         ],
-        postSort: [
+        sort: [
           { required: true, message: "岗位顺序不能为空", trigger: "blur" }
         ]
       }
@@ -209,8 +209,8 @@ export default {
     getList() {
       this.loading = true;
       listPost(this.queryParams).then(response => {
-        this.postList = response.rows;
-        this.total = response.total;
+        this.postList = response.data.records;
+        this.total = response.data.total;
         this.loading = false;
       });
     },
@@ -226,10 +226,10 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        postId: undefined,
+        id: undefined,
         postCode: undefined,
         postName: undefined,
-        postSort: 0,
+        sort: 0,
         status: "0",
         remark: undefined
       };
@@ -247,7 +247,7 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.postId)
+      this.ids = selection.map(item => item.id)
       this.single = selection.length!=1
       this.multiple = !selection.length
     },
@@ -260,7 +260,7 @@ export default {
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-      const postId = row.postId || this.ids
+      const postId = row.id || this.ids
       getPost(postId).then(response => {
         this.form = response.data;
         this.open = true;
@@ -271,7 +271,7 @@ export default {
     submitForm: function() {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          if (this.form.postId != undefined) {
+          if (this.form.id != undefined) {
             updatePost(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess("修改成功");
@@ -293,7 +293,7 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const postIds = row.postId || this.ids;
+      const postIds = row.id || this.ids;
       this.$confirm('是否确认删除岗位编号为"' + postIds + '"的数据项?', "警告", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",

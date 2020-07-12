@@ -56,10 +56,10 @@ export function resetForm(refName) {
 // 添加日期范围
 export function addDateRange(params, dateRange) {
 	var search = params;
-	search.beginTime = "";
+	search.startTime = "";
 	search.endTime = "";
 	if (null != dateRange && '' != dateRange) {
-		search.beginTime = this.dateRange[0];
+		search.startTime = this.dateRange[0];
 		search.endTime = this.dateRange[1];
 	}
 	return search;
@@ -117,12 +117,14 @@ export function handleTree(data, id, parentId, children, rootId) {
 	parentId = parentId || 'parentId'
 	children = children || 'children'
 	rootId = rootId || -1
+
 	//对源数据深度克隆
 	const cloneData = JSON.parse(JSON.stringify(data))
 	//循环所有项
 	const treeData =  cloneData.filter(father => {
 	  let branchArr = cloneData.filter(child => {
 		//返回每一项的子级数组
+		console.log(father[id]+ "====="+child[parentId]);
 		return father[id] === child[parentId]
 	  });
 	  branchArr.length > 0 ? father.children = branchArr : '';
