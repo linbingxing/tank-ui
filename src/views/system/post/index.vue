@@ -150,7 +150,7 @@
 </template>
 
 <script>
-import { listPost, getPost, delPost, addPost, updatePost, exportPost } from "@/api/system/post";
+import { pagePost, getPost, delPost, addPost, updatePost, exportPost } from "@/api/system/post";
 
 export default {
   name: "Post",
@@ -208,7 +208,7 @@ export default {
     /** 查询岗位列表 */
     getList() {
       this.loading = true;
-      listPost(this.queryParams).then(response => {
+      pagePost(this.queryParams).then(response => {
         this.postList = response.data.records;
         this.total = response.data.total;
         this.loading = false;

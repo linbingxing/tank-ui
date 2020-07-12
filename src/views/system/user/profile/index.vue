@@ -17,7 +17,7 @@
               </li>
               <li class="list-group-item">
                 <svg-icon icon-class="phone" />手机号码
-                <div class="pull-right">{{ user.phonenumber }}</div>
+                <div class="pull-right">{{ user.phone }}</div>
               </li>
               <li class="list-group-item">
                 <svg-icon icon-class="email" />用户邮箱
@@ -25,7 +25,7 @@
               </li>
               <li class="list-group-item">
                 <svg-icon icon-class="tree" />所属部门
-                <div class="pull-right" v-if="user.dept">{{ user.dept.deptName }} / {{ postGroup }}</div>
+                <div class="pull-right" v-if="user.deptName">{{ user.deptName }} / {{ postGroup }}</div>
               </li>
               <li class="list-group-item">
                 <svg-icon icon-class="peoples" />所属角色
@@ -82,8 +82,8 @@ export default {
     getUser() {
       getUserProfile().then(response => {
         this.user = response.data;
-        this.roleGroup = response.roleGroup;
-        this.postGroup = response.postGroup;
+        this.roleGroup = response.data.roleGroup;
+        this.postGroup = response.data.postGroup;
       });
     }
   }

@@ -208,7 +208,12 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="归属部门" prop="deptId">
-              <treeselect v-model="form.deptId" :options="deptOptions" :disable-branch-nodes="true" :show-count="true" placeholder="请选择归属部门" />
+              <treeselect v-model="form.deptId" 
+                          :options="deptOptions" 
+                          :disable-branch-nodes="true" 
+                          :show-count="true" 
+                          placeholder="请选择归属部门" 
+                          :props="defaultProps"/>
             </el-form-item>
           </el-col>
         </el-row>
@@ -267,10 +272,10 @@
               <el-select v-model="form.postIds" multiple placeholder="请选择">
                 <el-option
                   v-for="item in postOptions"
-                  :key="item.postId"
+                  :key="item.id"
                   :label="item.postName"
-                  :value="item.postId"
-                  :disabled="item.status == 1"
+                  :value="item.id"
+                  :disabled="item.status == 0"
                 ></el-option>
               </el-select>
             </el-form-item>
@@ -280,10 +285,10 @@
               <el-select v-model="form.roleIds" multiple placeholder="请选择">
                 <el-option
                   v-for="item in roleOptions"
-                  :key="item.roleId"
+                  :key="item.id"
                   :label="item.roleName"
-                  :value="item.roleId"
-                  :disabled="item.status == 1"
+                  :value="item.id"
+                  :disabled="item.status == 0"
                 ></el-option>
               </el-select>
             </el-form-item>
@@ -338,6 +343,8 @@
 
 <script>
 import { listUser, getUser, delUser, addUser, updateUser, exportUser, resetUserPwd, changeUserStatus, importTemplate } from "@/api/system/user";
+import { listPost} from "@/api/system/post";
+import { listRole} from "@/api/system/role";
 import { getToken } from "@/utils/auth";
 import { treeselect } from "@/api/system/dept";
 import Treeselect from "@riophae/vue-treeselect";
@@ -384,7 +391,7 @@ export default {
       form: {},
       defaultProps: {
         children: "children",
-        label: "deptName"
+        label: "label"
       },
       // 用户导入参数
       upload: {
@@ -548,23 +555,29 @@ export default {
     handleAdd() {
       this.reset();
       this.getTreeselect();
-      getUser().then(response => {
-        this.postOptions = response.data.posts;
-        this.roleOptions = response.data.roles;
-        this.open = true;
-        this.title = "添加用户";
-        this.form.password = this.initPassword;
+      listPost().then(res=>{
+        this.postOptions = res.data;
       });
+      listRole().then(res=>{
+        this.roleOptions = res.data;
+      });
+      this.open = true;
+      this.title = "添加用户";
+      this.form.password = this.initPassword;
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
       this.getTreeselect();
+      listPost().then(res=>{
+        this.postOptions = res.data;
+      });
+      listRole().then(res=>{
+        this.roleOptions = res.data;
+      });
       const userId = row.id || this.ids;
       getUser(userId).then(response => {
         this.form = response.data;
-        this.postOptions = response.data.posts;
-        this.roleOptions = response.data.roles;
         this.form.postIds = response.data.postIds;
         this.form.roleIds = response.data.roleIds;
         this.open = true;
