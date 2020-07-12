@@ -104,17 +104,17 @@
 
     <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="日志编号" align="center" prop="operId" />
-      <el-table-column label="系统模块" align="center" prop="title" />
-      <el-table-column label="操作类型" align="center" prop="businessType" :formatter="typeFormat" />
-      <el-table-column label="请求方式" align="center" prop="requestMethod" />
-      <el-table-column label="操作人员" align="center" prop="operName" />
-      <el-table-column label="主机" align="center" prop="operIp" width="130" :show-overflow-tooltip="true" />
+      <el-table-column label="日志编号" align="center" prop="id" />
+      <el-table-column label="系统模块" align="center" prop="type" :formatter="typeFormat"  />
+      <el-table-column label="操作类型" align="center" prop="title" />
+      <el-table-column label="请求方式" align="center" prop="method" />
+      <el-table-column label="操作人员" align="center" prop="createName" />
+      <el-table-column label="主机" align="center" prop="remoteAddr" width="130" :show-overflow-tooltip="true" />
       <el-table-column label="操作地点" align="center" prop="operLocation" :show-overflow-tooltip="true" />
       <el-table-column label="操作状态" align="center" prop="status" :formatter="statusFormat" />
-      <el-table-column label="操作日期" align="center" prop="operTime" width="180">
+      <el-table-column label="操作日期" align="center" prop="createTime" width="180">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.operTime) }}</span>
+          <span>{{ parseTime(scope.row.createTime) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -211,8 +211,8 @@ export default {
       form: {},
       // 查询参数
       queryParams: {
-        pageNum: 1,
-        pageSize: 10,
+        current: 1,
+        size: 10,
         title: undefined,
         operName: undefined,
         businessType: undefined,
@@ -222,7 +222,7 @@ export default {
   },
   created() {
     this.getList();
-    this.getDicts("sys_oper_type").then(response => {
+    this.getDicts("log_type").then(response => {
       this.typeOptions = response.data;
     });
     this.getDicts("sys_common_status").then(response => {
@@ -234,8 +234,8 @@ export default {
     getList() {
       this.loading = true;
       list(this.addDateRange(this.queryParams, this.dateRange)).then( response => {
-          this.list = response.rows;
-          this.total = response.total;
+          this.list = response.data.records;
+          this.total = response.data.total;
           this.loading = false;
         }
       );

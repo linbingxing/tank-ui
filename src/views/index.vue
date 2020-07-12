@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard-editor-container">
 
-    <panel-group @handleSetLineChartData="handleSetLineChartData" />
+    <!-- <panel-group @handleSetLineChartData="handleSetLineChartData" />
 
     <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
       <line-chart :chart-data="lineChartData" />
@@ -22,6 +22,11 @@
         <div class="chart-wrapper">
           <bar-chart />
         </div>
+      </el-col>
+    </el-row> -->
+    <el-row :gutter="20">
+      <el-col>
+        <panel-group @handleSetLineChartData="handleSetLineChartData" />
       </el-col>
     </el-row>
 
@@ -69,10 +74,14 @@ export default {
       lineChartData: lineChartData.newVisitis
     }
   },
+  created() {
+    
+  },
   methods: {
     handleSetLineChartData(type) {
       this.lineChartData = lineChartData[type]
     }
+    
   }
 }
 </script>

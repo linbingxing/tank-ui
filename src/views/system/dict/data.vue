@@ -24,9 +24,9 @@
         <el-select v-model="queryParams.status" placeholder="数据状态" clearable size="small">
           <el-option
             v-for="dict in statusOptions"
-            :key="dict.dictValue"
+            :key="Number(dict.dictValue)"
             :label="dict.dictLabel"
-            :value="dict.dictValue"
+            :value="Number(dict.dictValue)"
           />
         </el-select>
       </el-form-item>
@@ -79,12 +79,12 @@
 
     <el-table v-loading="loading" :data="dataList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="字典编码" align="center" prop="dictCode" />
+      <el-table-column label="字典编码" align="center" prop="id" />
       <el-table-column label="字典标签" align="center" prop="dictLabel" />
       <el-table-column label="字典键值" align="center" prop="dictValue" />
-      <el-table-column label="字典排序" align="center" prop="dictSort" />
+      <el-table-column label="字典排序" align="center" prop="sort" />
       <el-table-column label="状态" align="center" prop="status" :formatter="statusFormat" />
-      <el-table-column label="备注" align="center" prop="remark" :show-overflow-tooltip="true" />
+      <el-table-column label="备注" align="center" prop="description" :show-overflow-tooltip="true" />
       <el-table-column label="创建时间" align="center" prop="createTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime) }}</span>
@@ -130,20 +130,20 @@
         <el-form-item label="数据键值" prop="dictValue">
           <el-input v-model="form.dictValue" placeholder="请输入数据键值" />
         </el-form-item>
-        <el-form-item label="显示排序" prop="dictSort">
-          <el-input-number v-model="form.dictSort" controls-position="right" :min="0" />
+        <el-form-item label="显示排序" prop="sort">
+          <el-input-number v-model="form.sort" controls-position="right" :min="0" />
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in statusOptions"
-              :key="dict.dictValue"
-              :label="dict.dictValue"
+              :key="Number(dict.dictValue)"
+              :label="Number(dict.dictValue)"
             >{{dict.dictLabel}}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"></el-input>
+        <el-form-item label="备注" prop="description">
+          <el-input v-model="form.description" type="textarea" placeholder="请输入内容"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -186,8 +186,8 @@ export default {
       typeOptions: [],
       // 查询参数
       queryParams: {
-        pageNum: 1,
-        pageSize: 10,
+        current: 1,
+        size: 10,
         dictName: undefined,
         dictType: undefined,
         status: undefined
@@ -202,7 +202,7 @@ export default {
         dictValue: [
           { required: true, message: "数据键值不能为空", trigger: "blur" }
         ],
-        dictSort: [
+        sort: [
           { required: true, message: "数据顺序不能为空", trigger: "blur" }
         ]
       }
@@ -228,15 +228,15 @@ export default {
     /** 查询字典类型列表 */
     getTypeList() {
       listType().then(response => {
-        this.typeOptions = response.rows;
+        this.typeOptions = response.data;
       });
     },
     /** 查询字典数据列表 */
     getList() {
       this.loading = true;
       listData(this.queryParams).then(response => {
-        this.dataList = response.rows;
-        this.total = response.total;
+        this.dataList = response.data.records;
+        this.total = response.data.total;
         this.loading = false;
       });
     },
@@ -252,12 +252,12 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        dictCode: undefined,
+        id: undefined,
         dictLabel: undefined,
         dictValue: undefined,
-        dictSort: 0,
+        sort: 0,
         status: "0",
-        remark: undefined
+        description: undefined
       };
       this.resetForm("form");
     },
@@ -281,15 +281,15 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.dictCode)
+      this.ids = selection.map(item => item.id)
       this.single = selection.length!=1
       this.multiple = !selection.length
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-      const dictCode = row.dictCode || this.ids
-      getData(dictCode).then(response => {
+      const id = row.id || this.ids
+      getData(id).then(response => {
         this.form = response.data;
         this.open = true;
         this.title = "修改字典数据";
@@ -299,7 +299,7 @@ export default {
     submitForm: function() {
       this.$refs["form"].validate(valid => {
         if (valid) {
-          if (this.form.dictCode != undefined) {
+          if (this.form.id != undefined) {
             updateData(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess("修改成功");
@@ -321,7 +321,7 @@ export default {
     },
     /** 删除按钮操作 */
     handleDelete(row) {
-      const dictCodes = row.dictCode || this.ids;
+      const dictCodes = row.id || this.ids;
       this.$confirm('是否确认删除字典编码为"' + dictCodes + '"的数据项?', "警告", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
@@ -343,7 +343,7 @@ export default {
         }).then(function() {
           return exportData(queryParams);
         }).then(response => {
-          this.download(response.msg);
+          this.download(response.message);
         }).catch(function() {});
     }
   }

@@ -27,26 +27,27 @@
 
     <el-table
       v-loading="loading"
-      :data="list.slice((pageNum-1)*pageSize,pageNum*pageSize)"
+      :data="list"
       style="width: 100%;"
     >
-      <el-table-column label="序号" type="index" align="center">
+      <!-- <el-table-column label="序号" type="index" align="center">
         <template slot-scope="scope">
           <span>{{(pageNum - 1) * pageSize + scope.$index + 1}}</span>
         </template>
-      </el-table-column>
-      <el-table-column label="会话编号" align="center" prop="tokenId" :show-overflow-tooltip="true" />
-      <el-table-column label="登录名称" align="center" prop="userName" :show-overflow-tooltip="true" />
-      <el-table-column label="部门名称" align="center" prop="deptName" />
-      <el-table-column label="主机" align="center" prop="ipaddr" :show-overflow-tooltip="true" />
-      <el-table-column label="登录地点" align="center" prop="loginLocation" :show-overflow-tooltip="true" />
+      </el-table-column> -->
+      <el-table-column label="会话编号" align="center" prop="access_token" :show-overflow-tooltip="true" />
+      <el-table-column label="刷新编号" align="center" prop="refresh_token" :show-overflow-tooltip="true" />
+      <el-table-column label="登录名称" align="center" prop="user_name" :show-overflow-tooltip="true" />
+      <el-table-column label="部门名称" align="center" prop="dept_id" />
+      <el-table-column label="过期时间" align="center" prop="expires_in" :show-overflow-tooltip="true" />
+      <!-- <el-table-column label="登录地点" align="center" prop="loginLocation" :show-overflow-tooltip="true" />
       <el-table-column label="浏览器" align="center" prop="browser" />
       <el-table-column label="操作系统" align="center" prop="os" />
       <el-table-column label="登录时间" align="center" prop="loginTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.loginTime) }}</span>
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -60,8 +61,13 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total>0" :total="total" :page.sync="pageNum" :limit.sync="pageSize" />
-  </div>
+<pagination
+      v-show="total>0"
+      :total="total"
+      :page.sync="queryParams.current"
+      :limit.sync="queryParams.size"
+      @pagination="getList"
+    />  </div>
 </template>
 
 <script>
@@ -77,12 +83,12 @@ export default {
       total: 0,
       // 表格数据
       list: [],
-      pageNum: 1,
-      pageSize: 10,
       // 查询参数
       queryParams: {
         ipaddr: undefined,
-        userName: undefined
+        userName: undefined,
+        current: 1,
+        size: 10,
       }
     };
   },
@@ -94,14 +100,14 @@ export default {
     getList() {
       this.loading = true;
       list(this.queryParams).then(response => {
-        this.list = response.rows;
-        this.total = response.total;
+        this.list = response.data.records;
+        this.total = response.data.total;
         this.loading = false;
       });
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.pageNum = 1;
+      this.queryParams.current = 1;
       this.getList();
     },
     /** 重置按钮操作 */
@@ -111,12 +117,12 @@ export default {
     },
     /** 强退按钮操作 */
     handleForceLogout(row) {
-      this.$confirm('是否确认强退名称为"' + row.userName + '"的数据项?', "警告", {
+      this.$confirm('是否确认强退名称为"' + row.user_name + '"的数据项?', "警告", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
           type: "warning"
         }).then(function() {
-          return forceLogout(row.tokenId);
+          return forceLogout(row.access_token);
         }).then(() => {
           this.getList();
           this.msgSuccess("强退成功");

@@ -5,9 +5,9 @@
        <el-select v-model="queryParams.sysId" placeholder="所属系统" clearable size="small">
           <el-option
             v-for="dict in sysIdOptions"
-            :key="dict.code"
-            :label="dict.name"
-            :value="dict.code"
+            :key="Number(dict.dictValue)"
+            :label="dict.dictLabel"
+            :value="Number(dict.dictValue)"
           />
         </el-select>
       </el-form-item>
@@ -24,9 +24,9 @@
         <el-select v-model="queryParams.status" placeholder="菜单状态" clearable size="small">
           <el-option
             v-for="dict in statusOptions"
-            :key="dict.code"
-            :label="dict.name"
-            :value="dict.code"
+            :key="Number(dict.dictValue)"
+            :label="dict.dictLabel"
+            :value="Number(dict.dictValue)"
           />
         </el-select>
       </el-form-item>
@@ -93,10 +93,10 @@
               <el-select v-model="form.sysId" prop="sysId">
                 <el-option
                   v-for="dict in sysIdOptions"
-                  :key="dict.code"
-                  :label="dict.name"
-                  :value="dict.code"
-                >{{dict.name}}</el-option>
+                  :key="dict.dictValue"
+                  :label="dict.dictLabel"
+                  :value="dict.dictValue"
+                >{{dict.dictLabel}}</el-option>
               </el-select>
             </el-form-item>
           </el-col>
@@ -181,9 +181,9 @@
               <el-radio-group v-model="form.visible">
                 <el-radio
                   v-for="dict in visibleOptions"
-                  :key="dict.code"
-                  :label="dict.code"
-                >{{dict.name}}</el-radio>
+                  :key="Number(dict.dictValue)"
+                  :label="Number(dict.dictValue)"
+                >{{dict.dictLabel}}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -192,9 +192,9 @@
               <el-radio-group v-model="form.status">
                 <el-radio
                   v-for="dict in statusOptions"
-                  :key="dict.code"
-                  :label="dict.code"
-                >{{dict.name}}</el-radio>
+                  :key="Number(dict.dictValue)"
+                  :label="Number(dict.dictValue)"
+                >{{dict.dictLabel}}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>

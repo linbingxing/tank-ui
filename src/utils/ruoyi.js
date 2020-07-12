@@ -69,8 +69,8 @@ export function addDateRange(params, dateRange) {
 export function selectDictLabel(datas, value) {
 	var actions = [];
 	Object.keys(datas).map((key) => {
-		if (datas[key].code == ('' + value)) {
-			actions.push(datas[key].name);
+		if (datas[key].dictValue == ('' + value)) {
+			actions.push(datas[key].dictLabel);
 			return false;
 		}
 	})
@@ -124,7 +124,6 @@ export function handleTree(data, id, parentId, children, rootId) {
 	const treeData =  cloneData.filter(father => {
 	  let branchArr = cloneData.filter(child => {
 		//返回每一项的子级数组
-		console.log(father[id]+ "====="+child[parentId]);
 		return father[id] === child[parentId]
 	  });
 	  branchArr.length > 0 ? father.children = branchArr : '';

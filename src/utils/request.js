@@ -28,6 +28,7 @@ service.interceptors.request.use(config => {
 // 响应拦截器
 service.interceptors.response.use(res => {
     const status = Number(res.status) || 200
+   
     // 未设置状态码则默认成功状态
     const code = res.code || 200;
     // 获取错误信息
@@ -62,9 +63,8 @@ service.interceptors.response.use(res => {
     }
   },
   error => {
-    console.log('err' + error)
     Message({
-      message: error.message,
+      message: error.response.data.message,
       type: 'error',
       duration: 5 * 1000
     })

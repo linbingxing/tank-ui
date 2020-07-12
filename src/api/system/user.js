@@ -62,7 +62,7 @@ export function resetUserPwd(userId, password) {
   return request({
     url: '/upms/user/resetPwd',
     method: 'put',
-    data: data
+    params: data
   })
 }
 

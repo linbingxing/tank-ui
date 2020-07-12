@@ -1,11 +1,19 @@
 import request from '@/utils/request'
 
 // 查询字典类型列表
-export function listType(query) {
+export function pageType(query) {
   return request({
-    url: '/upms/dict/type/list',
+    url: '/upms/dict/type/page',
     method: 'get',
     params: query
+  })
+}
+
+// 查询字典类型列表
+export function listType() {
+  return request({
+    url: '/upms/dict/type/list',
+    method: 'get'
   })
 }
 

@@ -58,9 +58,9 @@
             >
               <el-option
                 v-for="dict in statusOptions"
-                :key="Number(dict.code)"
-                :label="dict.name"
-                :value="Number(dict.code)"
+                :key="Number(dict.dictValue)"
+                :label="dict.dictLabel"
+                :value="Number(dict.dictValue)"
               />
             </el-select>
           </el-form-item>
@@ -247,9 +247,9 @@
               <el-select v-model="form.sex" placeholder="请选择">
                 <el-option
                   v-for="dict in sexOptions"
-                  :key="Number(dict.code)"
-                  :label="dict.name"
-                  :value="Number(dict.code)"
+                  :key="Number(dict.dictValue)"
+                  :label="dict.dictLabel"
+                  :value="Number(dict.dictValue)"
                 ></el-option>
               </el-select>
             </el-form-item>
@@ -259,9 +259,9 @@
               <el-radio-group v-model="form.status">
                 <el-radio
                   v-for="dict in statusOptions"
-                  :key="Number(dict.code)"
-                  :label="Number(dict.code)"
-                >{{dict.name}}</el-radio>
+                  :key="Number(dict.dictValue)"
+                  :label="Number(dict.dictValue)"
+                >{{dict.dictLabel}}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
