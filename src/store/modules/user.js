@@ -1,6 +1,7 @@
-import { login, logout, getInfo } from '@/api/login'
+import { login, logout, getInfo,refreshToken } from '@/api/login'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import {deepClone, encryption} from '@/utils/util'
+import {getStore, setStore} from '@/utils/store.js'
 
 const user = {
   state: {
@@ -12,8 +13,29 @@ const user = {
   },
 
   mutations: {
-    SET_TOKEN: (state, token) => {
-      state.token = token
+    SET_ACCESS_TOKEN: (state, access_token) => {
+      state.access_token = access_token
+      setStore({
+        name: 'access_token',
+        content: state.access_token,
+        type: 'session'
+      })
+    },
+    SET_EXPIRES_IN: (state, expires_in) => {
+      state.expires_in = expires_in
+      setStore({
+        name: 'expires_in',
+        content: state.expires_in,
+        type: 'session'
+      })
+    },
+    SET_REFRESH_TOKEN: (state, rfToken) => {
+      state.refresh_token = rfToken
+      setStore({
+        name: 'refresh_token',
+        content: state.refresh_token,
+        type: 'session'
+      })
     },
     SET_NAME: (state, name) => {
       state.name = name
@@ -44,7 +66,9 @@ const user = {
       return new Promise((resolve, reject) => {
         login(username, password, code, uuid).then(res => {
           setToken(res.access_token)
-          commit('SET_TOKEN', res.access_token)
+          commit('SET_ACCESS_TOKEN', res.access_token)
+          commit('SET_REFRESH_TOKEN', res.refresh_token)
+          commit('SET_EXPIRES_IN', res.expires_in)
           resolve()
         }).catch(error => {
           reject(error)
@@ -72,12 +96,27 @@ const user = {
         })
       })
     },
+
+     // 刷新token
+     RefreshToken({commit, state}) {
+      return new Promise((resolve, reject) => {
+        refreshToken(state.refresh_token).then(response => {
+          setToken(response.access_token)
+          commit('SET_ACCESS_TOKEN', response.access_token)
+          commit('SET_REFRESH_TOKEN', response.refresh_token)
+          commit('SET_EXPIRES_IN', response.expires_in)
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
     
     // 退出系统
     LogOut({ commit, state }) {
       return new Promise((resolve, reject) => {
         logout(state.token).then(() => {
-          commit('SET_TOKEN', '')
+          commit('SET_ACCESS_TOKEN', '')
           commit('SET_ROLES', [])
           commit('SET_PERMISSIONS', [])
           removeToken()
@@ -91,7 +130,7 @@ const user = {
     // 前端 登出
     FedLogOut({ commit }) {
       return new Promise(resolve => {
-        commit('SET_TOKEN', '')
+        commit('SET_ACCESS_TOKEN', '')
         removeToken()
         resolve()
       })

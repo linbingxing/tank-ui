@@ -16,6 +16,20 @@ export function login(username, password, code, randomStr) {
   })
 }
 
+export const refreshToken = (refresh_token) => {
+  const grant_type = 'refresh_token'
+  const scope = 'all'
+  return request({
+    url: '/auth/oauth/token',
+    headers: {
+      'isToken': false,
+      'Authorization': 'Basic enVpcGluOnpsdA==',
+    },
+    method: 'post',
+    params: { refresh_token, grant_type, scope }
+  })
+}
+
 // 获取用户详细信息
 export function getInfo() {
   return request({

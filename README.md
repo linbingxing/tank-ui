@@ -2,7 +2,7 @@
 
 ```bash
 # 克隆项目
-git clone https://gitee.com/y_project/RuoYi-Vue
+git clone ssh://git@git.oteao.com:22222/frontend/cdp-upms-system.git
 
 # 进入项目目录
 cd ruoyi-ui
